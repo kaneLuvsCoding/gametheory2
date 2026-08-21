@@ -2,7 +2,10 @@
   "name": "market-tomato",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "client"
+  ],
   "scripts": {
-    "build": "npm --prefix client install && npm --prefix client run build"
+    "build": "npm run build --workspace=client"
   }
 }
