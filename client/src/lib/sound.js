@@ -62,7 +62,8 @@ class SoundManager {
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
           console.warn('Audio playback fallback:', err);
-          this.playCoin();
+          const fallback = new Audio(chosen.toLowerCase());
+          fallback.play().catch(() => this.playCoin());
         });
       }
     } catch (e) {
@@ -79,7 +80,8 @@ class SoundManager {
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
           console.warn('Winner MP3 playback fallback:', err);
-          this.playRandomMoneySound();
+          const fallback = new Audio('/sound/winner.mp3');
+          fallback.play().catch(() => this.playRandomMoneySound());
         });
       }
     } catch (e) {
