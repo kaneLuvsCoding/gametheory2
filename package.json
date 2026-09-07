@@ -6,6 +6,6 @@
     "client"
   ],
   "scripts": {
-    "build": "npm run build --workspace=client"
+    "build": "npm --prefix client install && npm --prefix client run build"
   }
 }
