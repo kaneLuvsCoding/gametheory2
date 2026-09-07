@@ -174,10 +174,24 @@ export function resolveMarket(players, submissions, options) {
      }
   }
 
+  // 7. Market Crash Penalty — hits EVERYONE who sold, including Bribe users
+  // No one escapes a collapsed market. 50% of each seller's revenue is wiped.
+  if (marketCrashed) {
+    for (const res of results) {
+      if (res.soldQuantity > 0) {
+        const lost = Math.floor(res.revenue * 0.5);
+        res.revenue = res.revenue - lost;
+        res.crashLoss = lost; // track for UI display
+      }
+    }
+  }
+
   return {
     marketCrashed,
     policeRaid,
     newHeatLevel,
+    totalDemand,
+    totalSold,
     playerResults: results
   };
 }

@@ -140,14 +140,27 @@ export class RoomManager {
     // Occasional bot reaction when humans chat
     if (!player.isBot && room.currentPhase === PHASES.SUMMIT) {
       const bots = Array.from(room.players.values()).filter(p => p.isBot);
-      if (bots.length > 0 && Math.random() < 0.35) {
+      if (bots.length > 0 && Math.random() < 0.25) {
         const respondingBot = bots[Math.floor(Math.random() * bots.length)];
         const replyDelay = Math.floor(Math.random() * 1600) + 900; // 0.9s to 2.5s
         setTimeout(() => {
           const currentRoom = this.rooms.get(roomId);
           if (currentRoom && currentRoom.currentPhase === PHASES.SUMMIT) {
-            const egg = BOT_EASTER_EGGS[Math.floor(Math.random() * BOT_EASTER_EGGS.length)];
-            this.handleChatMessage({ id: respondingBot.id }, { roomId, message: egg });
+            // Only 6% chance for easter egg on chat reply
+            if (Math.random() < 0.06) {
+              const egg = BOT_EASTER_EGGS[Math.floor(Math.random() * BOT_EASTER_EGGS.length)];
+              this.handleChatMessage({ id: respondingBot.id }, { roomId, message: egg });
+            } else {
+              const replies = [
+                "Agreed!",
+                "Sounds solid to me.",
+                "Let's stick to the price.",
+                "Watch out for undercuts.",
+                "I'm keeping my price fair."
+              ];
+              const reply = replies[Math.floor(Math.random() * replies.length)];
+              this.handleChatMessage({ id: respondingBot.id }, { roomId, message: reply });
+            }
           }
         }, replyDelay);
       }
@@ -227,7 +240,7 @@ export class RoomManager {
               const suggestedPrice = Math.floor(Math.random() * (80 - 40 + 1) + 40);
               const roll = Math.random();
               
-              if (roll < 0.45) {
+              if (roll < 0.50) {
                 // Propose a price + system chat
                 this.proposeCartelPrice({ id: player.id }, { roomId, price: suggestedPrice });
                 const msgs = [
@@ -238,7 +251,7 @@ export class RoomManager {
                 ];
                 const msg = msgs[Math.floor(Math.random() * msgs.length)];
                 this.handleChatMessage({ id: player.id }, { roomId, message: msg });
-              } else if (roll < 0.75) {
+              } else if (roll < 0.94) {
                 // Strategic banter
                 const msgs = [
                   "Don't undercut our crate agreement guys...",
@@ -250,7 +263,7 @@ export class RoomManager {
                 const msg = msgs[Math.floor(Math.random() * msgs.length)];
                 this.handleChatMessage({ id: player.id }, { roomId, message: msg });
               } else {
-                // Bot Easter Eggs
+                // Bot Easter Eggs (rare: 6% chance)
                 const easterEgg = BOT_EASTER_EGGS[Math.floor(Math.random() * BOT_EASTER_EGGS.length)];
                 this.handleChatMessage({ id: player.id }, { roomId, message: easterEgg });
               }
@@ -436,7 +449,9 @@ export class RoomManager {
       event: room.currentEvent,
       results: result.playerResults,
       marketCrashed: result.marketCrashed,
-      policeRaid: result.policeRaid
+      policeRaid: result.policeRaid,
+      totalDemand: result.totalDemand || marketDemand,
+      totalSold: result.totalSold !== undefined ? result.totalSold : result.playerResults.reduce((s, r) => s + (r.soldQuantity || 0), 0)
     });
 
     this.broadcastRoomState(roomId);

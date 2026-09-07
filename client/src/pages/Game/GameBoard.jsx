@@ -1165,14 +1165,37 @@ function RevealPhase({ gameState }) {
   const lastRound = gameState.priceHistory[gameState.priceHistory.length - 1];
   if (!lastRound) return <div className="flex items-center justify-center h-full text-stone-500">Loading results...</div>;
 
+  const totalDemand = lastRound.totalDemand || lastRound.marketDemand || (gameState.players?.length || 4) * (lastRound.event?.type === 'STIMULUS' ? 75 : 50);
+  const totalSold = lastRound.totalSold !== undefined ? lastRound.totalSold : lastRound.results.reduce((sum, r) => sum + (r.soldQuantity || 0), 0);
+  const totalOffered = lastRound.results.reduce((sum, r) => sum + (r.submittedQuantity || 0), 0);
+
   return (
-    <div className="h-full overflow-y-auto p-5">
-      <div className="mb-6 text-center">
+    <div className="h-full overflow-y-auto p-4 sm:p-5">
+      <div className="mb-5 text-center">
         <h2 className="text-2xl font-black text-stone-900 uppercase tracking-wide">Tomato Market Sales</h2>
-        <p className="text-stone-500 text-xs mt-1">Round {lastRound.round} · {lastRound.event?.name || 'Standard Trading Day'}</p>
+        <p className="text-stone-500 text-xs mt-1">Round {lastRound.round} of {gameState.maxRounds || 5} · {lastRound.event?.name || 'Standard Trading Day'}</p>
+
+        {/* Market Demand Overview Banner */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+          <div className="inline-flex items-center gap-2.5 bg-white border border-stone-200 px-4 py-1.5 rounded-2xl text-xs shadow-xs font-bold text-stone-700">
+            <span className="text-stone-400 uppercase tracking-widest text-[9px] font-black">Market Demand:</span>
+            <span className="font-mono text-primary-600 font-black flex items-center gap-1">
+              <img src="/tomato.svg" className="w-3.5 h-3.5" alt="crates" /> {totalDemand} Crates
+            </span>
+            <span className="text-stone-300">|</span>
+            <span className="text-emerald-700 font-mono text-[11px] font-bold">
+              {totalSold} Sold
+            </span>
+            {totalOffered > totalDemand && (
+              <span className="text-stone-400 font-mono text-[10px]">
+                ({totalOffered - totalSold} Unsold)
+              </span>
+            )}
+          </div>
+        </div>
 
         {/* Alert banners */}
-        <div className="flex flex-col items-center gap-2 mt-4">
+        <div className="flex flex-col items-center gap-2 mt-3">
           {lastRound.marketCrashed && (
             <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm">
               <TrendingDown className="w-4 h-4" /> Tomato Price Crash! (Market Over-Supplied)
@@ -1214,11 +1237,12 @@ function RevealPhase({ gameState }) {
               </div>
               
               {/* Optional modifiers like sabotage/audit in a simple line */}
-              {(res.inventoryDestroyed > 0 || res.raided || res.auditedPrice !== undefined) && (
+              {(res.inventoryDestroyed > 0 || res.raided || res.auditedPrice !== undefined || res.crashLoss > 0) && (
                 <div className="mt-2 pt-2 border-t border-stone-100 flex flex-wrap gap-2">
                    {res.inventoryDestroyed > 0 && <span className="text-[10px] text-red-500 flex items-center gap-1"><Swords className="w-3 h-3"/> Sabotaged (-50 Crates)</span>}
                    {res.raided && <span className="text-[10px] text-red-500 flex items-center gap-1"><ShieldAlert className="w-3 h-3"/> Inspector Fined (-50%)</span>}
                    {res.auditedPrice !== undefined && <span className="text-[10px] text-amber-500 flex items-center gap-1"><Eye className="w-3 h-3"/> Price Snooped</span>}
+                   {res.crashLoss > 0 && <span className="text-[10px] text-red-600 font-bold flex items-center gap-1">💥 Market Crash (-<img src="/currency.svg" className="inline w-2.5 h-2.5 opacity-80" alt="cash" />{res.crashLoss})</span>}
                 </div>
               )}
             </div>

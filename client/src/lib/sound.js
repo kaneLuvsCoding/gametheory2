@@ -2,7 +2,8 @@
 class SoundManager {
   constructor() {
     this.audioCtx = null;
-    this.enabled = localStorage.getItem('market_tomato_sound') === 'true'; // default false (OFF)
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('market_tomato_sound') : null;
+    this.enabled = stored !== 'false'; // default TRUE (ON) unless explicitly muted
   }
 
   init() {
@@ -23,7 +24,12 @@ class SoundManager {
 
   setEnabled(val) {
     this.enabled = !!val;
-    localStorage.setItem('market_tomato_sound', this.enabled ? 'true' : 'false');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('market_tomato_sound', this.enabled ? 'true' : 'false');
+    }
+    if (this.enabled) {
+      this.init();
+    }
   }
 
   playClick() {
@@ -183,3 +189,16 @@ class SoundManager {
 }
 
 export const soundManager = new SoundManager();
+
+// Automatically unlock browser audio on first user touch / click
+if (typeof window !== 'undefined') {
+  const unlockAudio = () => {
+    soundManager.init();
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+    window.removeEventListener('keydown', unlockAudio);
+  };
+  window.addEventListener('click', unlockAudio, { passive: true });
+  window.addEventListener('touchstart', unlockAudio, { passive: true });
+  window.addEventListener('keydown', unlockAudio, { passive: true });
+}
